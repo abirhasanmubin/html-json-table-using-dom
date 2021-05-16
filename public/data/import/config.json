@@ -1,0 +1,21 @@
+{
+    "title": "HTML Table",
+    "columns": [
+        {
+            "header": "Company",
+            "cell": "companyName"
+        },
+        {
+            "header": "Contact",
+            "cell": "contact.phone"
+        },
+        {
+            "header": "Country",
+            "cell": "location.country.name"
+        },
+        {
+            "header": "City",
+            "cell": "location.city.name"
+        }
+    ]
+}
