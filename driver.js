@@ -3,7 +3,7 @@ function createHTMLPage() {
 }
 
 function readConfig() {
-  fetch('/config.json').then(response => {
+  fetch('config.json').then(response => {
     response.json().then(data => {
       let { columnName, columnKey } = parseHeaderConfig(data.columns);
       createPageTitle(data.title);
