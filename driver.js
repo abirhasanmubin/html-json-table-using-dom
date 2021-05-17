@@ -6,7 +6,7 @@ function createHTMLPage() {
 }
 
 function readConfig() {
-  fetch('./../public/data/import/config.json').then(response => {
+  fetch('config.json').then(response => {
     response.json().then(data => {
       createPageTitle(data.title);
       createTableElement();
