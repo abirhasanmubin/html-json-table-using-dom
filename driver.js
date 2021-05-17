@@ -1,6 +1,3 @@
-let colName = [];
-let colKey = [];
-
 function createHTMLPage() {
   readConfig();
 }
@@ -8,9 +5,11 @@ function createHTMLPage() {
 function readConfig() {
   fetch('/config.json').then(response => {
     response.json().then(data => {
+      let { columnName, columnKey } = parseHeaderConfig(data.columns);
       createPageTitle(data.title);
       createTableElement();
-      createTableHeader(data.columns);
+      createTableHeader(columnName);
+      // createRowForm(columnName);
     });
   });
 }
@@ -38,17 +37,6 @@ function createPageTitle(titleText) {
   document.body.appendChild(lineBreak);
 }
 
-function fileHandling() {
-  let file = this.files[0];
-  let reader = new FileReader();
-  reader.readAsText(file);
-  reader.onload = function () {
-    console.log(reader.result);
-  };
-  reader.onerror = function () {
-    console.log(reader.error);
-  };
-}
 
 function createTableElement() {
   let table = document.createElement('table');
@@ -59,12 +47,35 @@ function createTableElement() {
   document.body.appendChild(table);
 }
 
+// function createRowForm(columnName) {
+//   let lineBreak = document.createElement('br');
+//   document.body.appendChild(lineBreak);
+
+//   let rowForm = document.createElement('input');
+//   rowForm.method = 'post';
+//   rowForm.id = "rowForm";
+
+//   for (let i = 0; i < columnName.length; i++) {
+//     let tempInput = document.createElement('input');
+//     tempInput.type = 'text';
+//     tempInput.id = columnName[i];
+//     tempInput.name = columnName[i];
+//     tempInput.placeholder = columnName[i];
+//     rowForm.appendChild(tempInput);
+//   }
+
+//   let button = document.createElement('button');
+//   button.textContent = 'Update';
+//   button.type = 'submit';
+
+//   rowForm.appendChild(button);
+
+//   document.body.appendChild(rowForm);
+// }
+
 function createTableHeader(headerConfig) {
-  let { columnName, columnKey } = parseHeaderConfig(headerConfig);
   let tBody = document.getElementById('tableBody');
-  tBody.appendChild(createRow(columnName, true));
-  colName = columnName;
-  colKey = columnKey;
+  tBody.appendChild(createRow(headerConfig, true));
 }
 
 function parseHeaderConfig(headerConfig) {
@@ -125,6 +136,62 @@ function createColumn(columnElement, headerFlag) {
   let columnText = document.createTextNode(columnElement);
   column.appendChild(columnText);
   return column;
+}
+
+function fileHandling() {
+  let file = this.files[0];
+  let reader = new FileReader();
+  reader.readAsText(file);
+  reader.onload = function () {
+    // console.log(reader.result);
+    readData(reader.result);
+  };
+  reader.onerror = function () {
+    console.log(reader.error);
+  };
+}
+
+function readData(tableData) {
+  fetch('/config.json').then(response => {
+    response.json().then(data => {
+      let { columnKey } = parseHeaderConfig(data.columns);
+      parseData(tableData, columnKey);
+    });
+  });
+}
+
+function parseData(tableData, columnKey) {
+  tableData = JSON.parse(tableData);
+  for (let i = 0; i < tableData.length; i++) {
+    createRowFromData(tableData[i], columnKey);
+  }
+}
+
+function createRowFromData(tableRowData, columnKey) {
+  let rowData = [];
+  for (i = 0; i < columnKey.length; i++) {
+    rowData.push(parseColumnData(tableRowData, columnKey[i]));
+  }
+
+  let tBody = document.getElementById('tableBody');
+  tBody.appendChild(createRow(rowData));
+}
+
+function parseColumnData(object, key) {
+  let tempObject = { ...object };
+  for (let i = 0; i < key.length; i++) {
+    if (tempObject.hasOwnProperty(key[i])) {
+      if (typeof tempObject[key[i]] === "object") {
+        tempObject = { ...tempObject[key[i]] };
+      }
+      else {
+        return tempObject[key[i]];
+      }
+    }
+    else {
+      return "-";
+    }
+  }
 }
 
 createHTMLPage();

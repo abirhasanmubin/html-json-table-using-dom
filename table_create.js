@@ -25,7 +25,7 @@ function createTitle(titleInfo) {
     return title;
 }
 
-// Utility function for parsing Config file 
+// Utility function for parsing Config file
 // for column header and value_keys of table_data
 function splitConfig(config) {
     let header = [];
@@ -65,7 +65,7 @@ function parseTableDataColumn(object, key) {
 function parseTableDataRow(object, key) {
     let data = [];
     for (let i = 0; i < key.length; i++) {
-        data.push(parseTableDataColumn(object, key[i]));
+        data.push((object, key[i]));
     }
     return data;
 }
@@ -93,7 +93,7 @@ function createRow(columnItems, headerFlag) {
     return row;
 }
 
-// Creating Table 
+// Creating Table
 function createTable(config, data) {
 
     //create table and tablebody element
