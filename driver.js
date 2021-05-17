@@ -152,7 +152,7 @@ function fileHandling() {
 }
 
 function readData(tableData) {
-  fetch('/config.json').then(response => {
+  fetch('config.json').then(response => {
     response.json().then(data => {
       let { columnKey } = parseHeaderConfig(data.columns);
       parseData(tableData, columnKey);
