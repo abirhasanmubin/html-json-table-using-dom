@@ -1,3 +1,7 @@
+let tableColumnKey;
+let tableColumnName;
+let tableData;
+
 function createHTMLPage() {
   readConfig();
 }
@@ -6,6 +10,8 @@ function readConfig() {
   fetch('config.json').then(response => {
     response.json().then(data => {
       let { columnName, columnKey } = parseHeaderConfig(data.columns);
+      tableColumnKey = columnKey.slice();
+      tableColumnName = columnName.slice();
       createPageTitle(data.title);
       createTableElement();
       createTableHeader(columnName);
@@ -75,7 +81,7 @@ function createTableElement() {
 
 function createTableHeader(headerConfig) {
   let tBody = document.getElementById('tableBody');
-  tBody.appendChild(createRow(headerConfig, true));
+  tBody.appendChild(createRow(headerConfig, 0, true));
 }
 
 function parseHeaderConfig(headerConfig) {
@@ -117,12 +123,47 @@ function parseHeaderConfig(headerConfig) {
   return { columnKey, columnName };
 }
 
-function createRow(rowElements, headerFlag = false) {
+function createRow(rowElements, dataId, headerFlag = false) {
   let row = document.createElement('tr');
   for (let i = 0; i < rowElements.length; i++) {
     row.appendChild(createColumn(rowElements[i], headerFlag));
   }
+  if (!headerFlag) {
+    let btnColumn = document.createElement('td');
+    let button = document.createElement('button');
+    button.textContent = 'Delete';
+    button.type = 'button';
+    button.addEventListener('click', () => {
+      deleteRow(dataId);
+    }, false);
+    btnColumn.appendChild(button);
+    row.appendChild(btnColumn);
+  }
+  if (headerFlag) {
+    let btnColumn = document.createElement('th');
+    let columnText = document.createTextNode("Delete");
+    btnColumn.appendChild(columnText);
+    row.appendChild(btnColumn);
+  }
   return row;
+}
+
+function deleteRow(dataId) {
+  tableData.splice(dataId, 1);
+  replaceTableData();
+}
+
+function replaceTableData() {
+  removeRows();
+  parseData(tableData, tableColumnKey);
+}
+
+function removeRows() {
+  var table = document.getElementById('table');
+  rowCount = table.rows.length;
+  for (let x = rowCount - 1; x > 0; x--) {
+    table.deleteRow(x);
+  }
 }
 
 function createColumn(columnElement, headerFlag) {
@@ -143,8 +184,9 @@ function fileHandling() {
   let reader = new FileReader();
   reader.readAsText(file);
   reader.onload = function () {
-    // console.log(reader.result);
-    readData(reader.result);
+    tableData = reader.result.slice();
+    tableData = JSON.parse(tableData);
+    readData(tableData);
   };
   reader.onerror = function () {
     console.log(reader.error);
@@ -152,29 +194,23 @@ function fileHandling() {
 }
 
 function readData(tableData) {
-  fetch('config.json').then(response => {
-    response.json().then(data => {
-      let { columnKey } = parseHeaderConfig(data.columns);
-      parseData(tableData, columnKey);
-    });
-  });
+  parseData(tableData, tableColumnKey);
 }
 
 function parseData(tableData, columnKey) {
-  tableData = JSON.parse(tableData);
   for (let i = 0; i < tableData.length; i++) {
-    createRowFromData(tableData[i], columnKey);
+    createRowFromData(tableData[i], columnKey, i);
   }
 }
 
-function createRowFromData(tableRowData, columnKey) {
+function createRowFromData(tableRowData, columnKey, dataId) {
   let rowData = [];
   for (i = 0; i < columnKey.length; i++) {
     rowData.push(parseColumnData(tableRowData, columnKey[i]));
   }
 
   let tBody = document.getElementById('tableBody');
-  tBody.appendChild(createRow(rowData));
+  tBody.appendChild(createRow(rowData, dataId));
 }
 
 function parseColumnData(object, key) {
