@@ -240,14 +240,16 @@ function createColumn(columnElement, rowId, headerFlag) {
   let columnText = document.createTextNode(columnElement);
   column.style.cursor = "pointer";
   column.appendChild(columnText);
-  column.contentEditable = true;
-  column.addEventListener('input', (event) => {
-    event.preventDefault();
-    let columnIndex = column.cellIndex;
-    let value = document.getElementById('table')
-      .rows[rowId + 1].cells[columnIndex].textContent;
-    updateValue(rowId, columnIndex, value);
-  });
+  if (!headerFlag) {
+    column.contentEditable = true;
+    column.addEventListener('input', (event) => {
+      event.preventDefault();
+      let columnIndex = column.cellIndex;
+      let value = document.getElementById('table')
+        .rows[rowId + 1].cells[columnIndex].textContent;
+      updateValue(rowId, columnIndex, value);
+    });
+  }
   return column;
 }
 
@@ -337,6 +339,7 @@ function createTableElement() {
 function createRowForm(columnName) {
   let lineBreak = document.createElement('br');
   document.body.appendChild(lineBreak);
+
 
   let rowForm = document.createElement('form');
   rowForm.method = 'post';
