@@ -1,0 +1,87 @@
+[
+  {
+    "companyName": "afdss",
+    "contact": {
+      "phone": "123",
+      "email": "abc@demo.com"
+    },
+    "location": {
+      "country": {
+        "name": "Bangladesh",
+        "code": "BD"
+      },
+      "city": {
+        "name": "Dhaka",
+        "code": "DHK"
+      }
+    }
+  },
+  {
+    "companyName": "qqweref",
+    "contact": {
+      "phone": "456",
+      "email": "def@demo.com"
+    },
+    "location": {
+      "country": {
+        "name": "Bangladesh",
+        "code": "BD"
+      },
+      "city": {
+        "name": "Dhaka",
+        "code": "DHK"
+      }
+    }
+  },
+  {
+    "companyName": "gwerqewrhi",
+    "contact": {
+      "phone": "789",
+      "email": "ghi@demo.com"
+    },
+    "location": {
+      "country": {
+        "name": "Bangladesh",
+        "code": "BD"
+      },
+      "city": {
+        "name": "Dhaka",
+        "code": "DHK"
+      }
+    }
+  },
+  {
+    "companyName": "qwreqwerjkl",
+    "contact": {
+      "phone": "101112",
+      "email": "jkl@demo.com"
+    },
+    "location": {
+      "country": {
+        "name": "Bangladesh",
+        "code": "BD"
+      },
+      "city": {
+        "name": "Dhaka",
+        "code": "DHK"
+      }
+    }
+  },
+  {
+    "companyName": "qerwqwermno",
+    "contact": {
+      "phone": "131415",
+      "email": "mno@demo.com"
+    },
+    "location": {
+      "country": {
+        "name": "Bangladesh",
+        "code": "BD"
+      },
+      "city": {
+        "name": "Dhaka",
+        "code": "DHK"
+      }
+    }
+  }
+]

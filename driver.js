@@ -1,6 +1,16 @@
+/* requirement checklist
+(Done)Task 1. Table will be ready from conifg.
+(Done)Task 2. Data will be shown after data.json upload.
+(Done)Task 3: First Upload should be upload. (Can do with table row length)
+Task 4. JSON Upload has 2 options. Upload(reset the data) and Concat(With previous uploads).
+(Done)Task 5. Row Delete with button.
+Task 6. Edited data should be saved on main json.
+(Done)Task 7. Export JSON.
+*/
+
 let tableColumnKey;
 let tableColumnName;
-let tableData;
+let tableData = [];
 
 function createHTMLPage() {
   readConfig();
@@ -38,6 +48,8 @@ function createPageTitle(titleText) {
 
   headerDiv.appendChild(fileInput);
 
+  headerDiv.appendChild(addDownloadButton());
+
   document.body.appendChild(headerDiv);
   let lineBreak = document.createElement('br');
   document.body.appendChild(lineBreak);
@@ -51,6 +63,31 @@ function createTableElement() {
   tableBody.id = 'tableBody';
   table.appendChild(tableBody);
   document.body.appendChild(table);
+}
+
+function addDownloadButton() {
+  let button = document.createElement('button');
+  button.textContent = "Download Data as JSON";
+  button.type = 'button';
+  button.id = 'downloadButton';
+  button.addEventListener('click', downloadDataAsJSON, false);
+  return button;
+}
+
+function downloadDataAsJSON() {
+  if (tableData.length === 0) {
+    alert("Add some data first!!!!");
+  }
+  else {
+    let anchor = document.createElement('a');
+    let dataStr = "data:text/json;charset=utf-8,"
+      + encodeURIComponent(JSON.stringify(tableData));
+    anchor.setAttribute("href", dataStr);
+    anchor.setAttribute("download", "data.json");
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+  }
 }
 
 // function createRowForm(columnName) {
@@ -184,8 +221,9 @@ function fileHandling() {
   let reader = new FileReader();
   reader.readAsText(file);
   reader.onload = function () {
-    tableData = reader.result.slice();
-    tableData = JSON.parse(tableData);
+    let fileData = JSON.parse(reader.result);
+    fileData.forEach(data => tableData.push(data));
+    removeRows();
     readData(tableData);
   };
   reader.onerror = function () {
