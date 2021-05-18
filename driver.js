@@ -2,7 +2,7 @@
 (Done)Task 1. Table will be ready from conifg.
 (Done)Task 2. Data will be shown after data.json upload.
 (Done)Task 3: First Upload should be upload. (Can do with table row length)
-Task 4. JSON Upload has 2 options. Upload(reset the data) and Concat(With previous uploads).
+(Done)Task 4. JSON Upload has 2 options. Upload(reset the data) and Concat(With previous uploads).
 (Done)Task 5. Row Delete with button.
 Task 6. Edited data should be saved on main json.
 (Done)Task 7. Export JSON.
@@ -11,6 +11,7 @@ Task 6. Edited data should be saved on main json.
 let tableColumnKey;
 let tableColumnName;
 let tableData = [];
+let tempData = [];
 
 function createHTMLPage() {
   readConfig();
@@ -41,18 +42,58 @@ function createPageTitle(titleText) {
   pageTitleElement.appendChild(pageTitleText);
   headerDiv.appendChild(pageTitleElement);
 
+  headerDiv.appendChild(addFileInput());
+
+  let lineBreak = document.createElement('br');
+  document.body.appendChild(lineBreak);
+
+  headerDiv.appendChild(addDownloadButton());
+  document.body.appendChild(lineBreak);
+
+  document.body.appendChild(headerDiv);
+  document.body.appendChild(lineBreak);
+}
+
+function addFileInput() {
+  let form = document.createElement('form');
+  form.id = 'file';
+  form.method = 'post';
+
   let fileInput = document.createElement('input');
   fileInput.setAttribute('type', 'file');
   fileInput.id = 'fileInput';
   fileInput.addEventListener('change', fileHandling, false);
 
-  headerDiv.appendChild(fileInput);
+  let button1 = document.createElement('button');
+  button1.id = "uploadButton";
+  button1.textContent = "Upload Data";
+  button1.type = 'button';
 
-  headerDiv.appendChild(addDownloadButton());
+  button1.addEventListener('click', () => {
+    tableData = [];
+    tableData = [...tempData];
+    tempData = [];
+    removeRows();
+    readData(tableData);
+  }, false);
 
-  document.body.appendChild(headerDiv);
-  let lineBreak = document.createElement('br');
-  document.body.appendChild(lineBreak);
+  let button2 = document.createElement('button');
+  button2.id = "appendButton";
+  button2.textContent = "Append Data";
+  button2.type = 'button';
+
+  button2.addEventListener('click', () => {
+    tableData.push(...tempData);
+    tempData = [];
+    removeRows();
+    readData(tableData);
+  }, false);
+
+  form.appendChild(fileInput);
+  form.appendChild(button1);
+  form.appendChild(button2);
+
+  return form;
 }
 
 
@@ -221,10 +262,8 @@ function fileHandling() {
   let reader = new FileReader();
   reader.readAsText(file);
   reader.onload = function () {
-    let fileData = JSON.parse(reader.result);
-    fileData.forEach(data => tableData.push(data));
-    removeRows();
-    readData(tableData);
+    let fData = JSON.parse(reader.result);
+    tempData = fData.slice();
   };
   reader.onerror = function () {
     console.log(reader.error);
