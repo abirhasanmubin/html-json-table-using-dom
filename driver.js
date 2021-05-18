@@ -24,7 +24,7 @@ function readConfig() {
       let { columnName, columnKey } = parseHeaderConfig(data.columns);
       tableColumnKey = columnKey.slice();
       tableColumnName = columnName.slice();
-      createPageTitle(data.title);
+      createPageHeader(data.title);
       createTableElement();
       createTableHeader(columnName);
       createRowForm(columnName);
@@ -32,62 +32,46 @@ function readConfig() {
   });
 }
 
-function createRowForm(columnName) {
-  let lineBreak = document.createElement('br');
-  document.body.appendChild(lineBreak);
-
-  let rowForm = document.createElement('form');
-  rowForm.method = 'post';
-  rowForm.id = "rowForm";
-
-  for (let i = 0; i < columnName.length; i++) {
-    let tempInput = document.createElement('input');
-    tempInput.type = 'text';
-    tempInput.id = columnName[i];
-    tempInput.name = columnName[i];
-    tempInput.placeholder = columnName[i];
-    tempInput.required = true;
-    rowForm.appendChild(tempInput);
-  }
-
-  let button = document.createElement('button');
-  button.textContent = 'Add Data';
-  button.type = 'submit';
-
-
-  rowForm.appendChild(button);
-  rowForm.addEventListener('submit', (event) => {
-    event.preventDefault();
-    let object = {};
-    for (let i = 0; i < tableColumnKey.length; i++) {
-      createObject(object, tableColumnKey[i], event.target[i].value);
+function parseHeaderConfig(headerConfig) {
+  let columnName = [];
+  let columnKey = [];
+  for (let i = 0; i < headerConfig.length; i++) {
+    if (headerConfig[i].hasOwnProperty('header')) {
+      if (headerConfig[i].header.length > 0) {
+        columnName.push(headerConfig[i].header);
+      }
+      else {
+        alert("Please Correctly update the config header elements!!!");
+        throw (new Error('Config File Header Element Error!'));
+        break;
+      }
     }
-    tableData.push(object);
-    refreshTable();
-    rowForm.reset();
-  }, false);
-
-  document.body.appendChild(rowForm);
-}
-
-function refreshTable() {
-  removeRows();
-  readData(tableData);
-}
-
-function createObject(obj, keyPath, value) {
-  lastKeyIndex = keyPath.length - 1;
-  for (var i = 0; i < lastKeyIndex; ++i) {
-    key = keyPath[i];
-    if (!(key in obj)) {
-      obj[key] = {};
+    else {
+      alert("Please Correctly update the config file!!!");
+      throw (new Error('Config File Header Element Error!'));
+      break;
     }
-    obj = obj[key];
+    if (headerConfig[i].hasOwnProperty('cell')) {
+      if (headerConfig[i].cell.length > 0) {
+        let keys = headerConfig[i].cell;
+        columnKey.push(keys.split('.'));
+      }
+      else {
+        alert("Please Correctly update the config cell elements!!!");
+        throw (new Error('Config File Header Element Error!'));
+        break;
+      }
+    }
+    else {
+      alert("Please Correctly update the config file");
+      throw (new Error('Config File Cell Element Error'));
+      break;
+    }
   }
-  obj[keyPath[lastKeyIndex]] = value;
+  return { columnKey, columnName };
 }
 
-function createPageTitle(titleText) {
+function createPageHeader(titleText) {
   let headerDiv = document.createElement('div');
   headerDiv.id = "header";
 
@@ -104,6 +88,9 @@ function createPageTitle(titleText) {
   document.body.appendChild(lineBreak);
 
   headerDiv.appendChild(addDownloadButton());
+  document.body.appendChild(lineBreak);
+
+  headerDiv.appendChild(addTableSearch());
   document.body.appendChild(lineBreak);
 
   document.body.appendChild(headerDiv);
@@ -152,159 +139,6 @@ function addFileInput() {
   return form;
 }
 
-function createTableElement() {
-  let table = document.createElement('table');
-  table.id = 'table';
-  let tableBody = document.createElement('tbody');
-  tableBody.id = 'tableBody';
-  table.appendChild(tableBody);
-  document.body.appendChild(table);
-}
-
-function addDownloadButton() {
-  let button = document.createElement('button');
-  button.textContent = "Download Data as JSON";
-  button.type = 'button';
-  button.id = 'downloadButton';
-  button.addEventListener('click', downloadDataAsJSON, false);
-  return button;
-}
-
-function downloadDataAsJSON() {
-  if (tableData.length === 0) {
-    alert("Add some data first!!!!");
-  }
-  else {
-    let anchor = document.createElement('a');
-    let dataStr = "data:text/json;charset=utf-8,"
-      + encodeURIComponent(JSON.stringify(tableData));
-    anchor.href = dataStr;
-    anchor.download = "data.json";
-    // anchor.setAttribute("download", "data.json");
-    document.body.appendChild(anchor);
-    anchor.click();
-    anchor.remove();
-  }
-}
-
-function createTableHeader(headerConfig) {
-  let tBody = document.getElementById('tableBody');
-  tBody.appendChild(createRow(headerConfig, 0, true));
-}
-
-function parseHeaderConfig(headerConfig) {
-  let columnName = [];
-  let columnKey = [];
-  for (let i = 0; i < headerConfig.length; i++) {
-    if (headerConfig[i].hasOwnProperty('header')) {
-      if (headerConfig[i].header.length > 0) {
-        columnName.push(headerConfig[i].header);
-      }
-      else {
-        alert("Please Correctly update the config header elements!!!");
-        throw (new Error('Config File Header Element Error!'));
-        break;
-      }
-    }
-    else {
-      alert("Please Correctly update the config file!!!");
-      throw (new Error('Config File Header Element Error!'));
-      break;
-    }
-    if (headerConfig[i].hasOwnProperty('cell')) {
-      if (headerConfig[i].cell.length > 0) {
-        let keys = headerConfig[i].cell;
-        columnKey.push(keys.split('.'));
-      }
-      else {
-        alert("Please Correctly update the config cell elements!!!");
-        throw (new Error('Config File Header Element Error!'));
-        break;
-      }
-    }
-    else {
-      alert("Please Correctly update the config file");
-      throw (new Error('Config File Cell Element Error'));
-      break;
-    }
-  }
-  return { columnKey, columnName };
-}
-
-function createRow(rowElements, dataId, headerFlag = false) {
-  let row = document.createElement('tr');
-  for (let i = 0; i < rowElements.length; i++) {
-    row.appendChild(createColumn(rowElements[i], dataId, headerFlag));
-  }
-  if (!headerFlag) {
-    let btnColumn = document.createElement('td');
-    let button = document.createElement('button');
-    button.textContent = 'Delete';
-    button.type = 'button';
-    button.addEventListener('click', () => {
-      deleteRowTable(dataId);
-    }, false);
-    btnColumn.appendChild(button);
-    row.appendChild(btnColumn);
-  }
-  if (headerFlag) {
-    let btnColumn = document.createElement('th');
-    let columnText = document.createTextNode("Delete");
-    btnColumn.appendChild(columnText);
-    row.appendChild(btnColumn);
-  }
-  return row;
-}
-
-function deleteRowTable(dataId) {
-  tableData.splice(dataId, 1);
-  refreshTable();
-}
-
-function removeRows() {
-  var table = document.getElementById('table');
-  rowCount = table.rows.length;
-  for (let x = rowCount - 1; x > 0; x--) {
-    table.deleteRow(x);
-  }
-}
-
-function createColumn(columnElement, rowId, headerFlag) {
-  let column;
-  if (headerFlag) {
-    column = document.createElement('th');
-  }
-  else {
-    column = document.createElement('td');
-  }
-  let columnText = document.createTextNode(columnElement);
-  column.style.cursor = "pointer";
-  column.appendChild(columnText);
-  column.contentEditable = true;
-  column.addEventListener('input', (event) => {
-    event.preventDefault();
-    let columnIndex = column.cellIndex;
-    let value = document.getElementById('table')
-      .rows[rowId + 1].cells[columnIndex].textContent;
-    updateValue(rowId, columnIndex, value);
-  });
-  return column;
-}
-
-
-function updateValue(rowIndex, columnIndex, value) {
-  let data = tableData[rowIndex];
-  let keys = tableColumnKey[columnIndex];
-  for (let i = 0; i < keys.length; i++) {
-    if (typeof data[keys[i]] === "object") {
-      data = data[keys[i]];
-    }
-    else {
-      data[keys[i]] = value;
-    }
-  }
-}
-
 function fileHandling() {
   let file = this.files[0];
   let reader = new FileReader();
@@ -318,8 +152,17 @@ function fileHandling() {
   };
 }
 
-function readData(tableData) {
+function refreshTable() {
+  removeRows();
   parseData(tableData, tableColumnKey);
+}
+
+function removeRows() {
+  var table = document.getElementById('table');
+  rowCount = table.rows.length;
+  for (let i = rowCount - 1; i > 0; i--) {
+    table.deleteRow(i);
+  }
 }
 
 function parseData(tableData, columnKey) {
@@ -353,6 +196,197 @@ function parseColumnData(object, key) {
       return "-";
     }
   }
+}
+
+function createRow(rowElements, dataId, headerFlag = false) {
+  let row = document.createElement('tr');
+  for (let i = 0; i < rowElements.length; i++) {
+    row.appendChild(createColumn(rowElements[i], dataId, headerFlag));
+  }
+  if (!headerFlag) {
+    let btnColumn = document.createElement('td');
+    let button = document.createElement('button');
+    button.textContent = 'Delete';
+    button.type = 'button';
+    button.addEventListener('click', () => {
+      deleteTableRow(dataId);
+    }, false);
+    btnColumn.appendChild(button);
+    row.appendChild(btnColumn);
+  }
+  if (headerFlag) {
+    let btnColumn = document.createElement('th');
+    let columnText = document.createTextNode("Action");
+    btnColumn.appendChild(columnText);
+    row.appendChild(btnColumn);
+  }
+  return row;
+}
+
+function deleteTableRow(dataId) {
+  tableData.splice(dataId, 1);
+  refreshTable();
+}
+
+
+function createColumn(columnElement, rowId, headerFlag) {
+  let column;
+  if (headerFlag) {
+    column = document.createElement('th');
+  }
+  else {
+    column = document.createElement('td');
+  }
+  let columnText = document.createTextNode(columnElement);
+  column.style.cursor = "pointer";
+  column.appendChild(columnText);
+  column.contentEditable = true;
+  column.addEventListener('input', (event) => {
+    event.preventDefault();
+    let columnIndex = column.cellIndex;
+    let value = document.getElementById('table')
+      .rows[rowId + 1].cells[columnIndex].textContent;
+    updateValue(rowId, columnIndex, value);
+  });
+  return column;
+}
+
+function updateValue(rowIndex, columnIndex, value) {
+  let data = tableData[rowIndex];
+  let keys = tableColumnKey[columnIndex];
+  for (let i = 0; i < keys.length; i++) {
+    if (typeof data[keys[i]] === "object") {
+      data = data[keys[i]];
+    }
+    else {
+      data[keys[i]] = value;
+    }
+  }
+}
+
+function addDownloadButton() {
+  let button = document.createElement('button');
+  button.textContent = "Download Data as JSON";
+  button.type = 'button';
+  button.id = 'downloadButton';
+  button.addEventListener('click', downloadDataAsJSON, false);
+  return button;
+}
+
+function downloadDataAsJSON() {
+  if (tableData.length === 0) {
+    alert("Add some data first!!!!");
+  }
+  else {
+    let anchor = document.createElement('a');
+    let dataStr = "data:text/json;charset=utf-8,"
+      + encodeURIComponent(JSON.stringify(tableData));
+    anchor.href = dataStr;
+    anchor.download = "data.json";
+    // anchor.setAttribute("download", "data.json");
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+  }
+}
+
+function addTableSearch() {
+  let input = document.createElement('input');
+  input.type = 'text';
+  input.id = 'search'
+  input.placeholder = 'Search Here'
+  input.contentEditable = true;
+  input.addEventListener('input', searchResult, false);
+  return input;
+}
+
+function searchResult() {
+  let input = document.getElementById('search');
+  let searchText = input.value.toLowerCase();
+  let table = document.getElementById("table");
+  let tableRows = table.getElementsByTagName("tr");
+  for (let i = 1; i < tableRows.length; i++) {
+    tableColumns = tableRows[i].getElementsByTagName("td");
+    let searchFlag = false;
+    for (let j = 0; j < tableColumns.length; j++) {
+      let cell = tableColumns[j];
+      let textValue = cell.textContent;
+      if (textValue.toLowerCase().indexOf(searchText) > -1) {
+        searchFlag = true;
+        break;
+      }
+    }
+    if (searchFlag) {
+      tableRows[i].style.display = "";
+    }
+    else {
+      tableRows[i].style.display = "none";
+    }
+  }
+}
+
+function createTableElement() {
+  let table = document.createElement('table');
+  table.id = 'table';
+  let tableBody = document.createElement('tbody');
+  tableBody.id = 'tableBody';
+  table.appendChild(tableBody);
+  document.body.appendChild(table);
+}
+
+function createRowForm(columnName) {
+  let lineBreak = document.createElement('br');
+  document.body.appendChild(lineBreak);
+
+  let rowForm = document.createElement('form');
+  rowForm.method = 'post';
+  rowForm.id = "rowForm";
+
+  for (let i = 0; i < columnName.length; i++) {
+    let tempInput = document.createElement('input');
+    tempInput.type = 'text';
+    tempInput.id = columnName[i];
+    tempInput.name = columnName[i];
+    tempInput.placeholder = columnName[i];
+    tempInput.required = true;
+    rowForm.appendChild(tempInput);
+  }
+
+  let button = document.createElement('button');
+  button.textContent = 'Add Data';
+  button.type = 'submit';
+
+
+  rowForm.appendChild(button);
+  rowForm.addEventListener('submit', (event) => {
+    event.preventDefault();
+    let object = {};
+    for (let i = 0; i < tableColumnKey.length; i++) {
+      createDataObject(object, tableColumnKey[i], event.target[i].value);
+    }
+    tableData.push(object);
+    refreshTable();
+    rowForm.reset();
+  }, false);
+
+  document.body.appendChild(rowForm);
+}
+
+function createDataObject(obj, keyPath, value) {
+  lastKeyIndex = keyPath.length - 1;
+  for (var i = 0; i < lastKeyIndex; ++i) {
+    key = keyPath[i];
+    if (!(key in obj)) {
+      obj[key] = {};
+    }
+    obj = obj[key];
+  }
+  obj[keyPath[lastKeyIndex]] = value;
+}
+
+function createTableHeader(headerConfig) {
+  let tBody = document.getElementById('tableBody');
+  tBody.appendChild(createRow(headerConfig, 0, true));
 }
 
 createHTMLPage();
