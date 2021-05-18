@@ -46,6 +46,7 @@ function createRowForm(columnName) {
     tempInput.id = columnName[i];
     tempInput.name = columnName[i];
     tempInput.placeholder = columnName[i];
+    tempInput.required = true;
     rowForm.appendChild(tempInput);
   }
 
@@ -230,7 +231,7 @@ function parseHeaderConfig(headerConfig) {
 function createRow(rowElements, dataId, headerFlag = false) {
   let row = document.createElement('tr');
   for (let i = 0; i < rowElements.length; i++) {
-    row.appendChild(createColumn(rowElements[i], headerFlag));
+    row.appendChild(createColumn(rowElements[i], dataId, headerFlag));
   }
   if (!headerFlag) {
     let btnColumn = document.createElement('td');
@@ -238,7 +239,7 @@ function createRow(rowElements, dataId, headerFlag = false) {
     button.textContent = 'Delete';
     button.type = 'button';
     button.addEventListener('click', () => {
-      deleteRow(dataId);
+      deleteRowTable(dataId);
     }, false);
     btnColumn.appendChild(button);
     row.appendChild(btnColumn);
@@ -252,15 +253,15 @@ function createRow(rowElements, dataId, headerFlag = false) {
   return row;
 }
 
-function deleteRow(dataId) {
+function deleteRowTable(dataId) {
   tableData.splice(dataId, 1);
-  replaceTableData();
+  refreshTable();
 }
 
-function replaceTableData() {
-  removeRows();
-  parseData(tableData, tableColumnKey);
-}
+// function replaceTableData() {
+//   removeRows();
+//   parseData(tableData, tableColumnKey);
+// }
 
 function removeRows() {
   var table = document.getElementById('table');
@@ -270,7 +271,7 @@ function removeRows() {
   }
 }
 
-function createColumn(columnElement, headerFlag) {
+function createColumn(columnElement, rowId, headerFlag) {
   let column;
   if (headerFlag) {
     column = document.createElement('th');
@@ -279,8 +280,35 @@ function createColumn(columnElement, headerFlag) {
     column = document.createElement('td');
   }
   let columnText = document.createTextNode(columnElement);
+  column.style.cursor = "pointer";
+  column.addEventListener('click', (event) => {
+    event.preventDefault();
+    let columnIndex = column.cellIndex;
+
+    // column.appendChild(createColumnForm(rowId, columnIndex));
+
+    updateValue(rowId, columnIndex);
+  })
   column.appendChild(columnText);
   return column;
+}
+
+// function createColumnForm(rowId) {
+
+// }
+
+function updateValue(rowIndex, columnIndex) {
+  let data = tableData[rowIndex];
+  let keys = tableColumnKey[columnIndex];
+  for (let i = 0; i < keys.length; i++) {
+    if (typeof data[keys[i]] === "object") {
+      data = data[keys[i]];
+    }
+    else {
+      data[keys[i]] = "abir";
+    }
+  }
+  refreshTable();
 }
 
 function fileHandling() {
