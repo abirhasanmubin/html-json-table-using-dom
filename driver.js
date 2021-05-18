@@ -6,6 +6,7 @@
 (Done)Task 5. Row Delete with button.
 Task 6. Edited data should be saved on main json.
 (Done)Task 7. Export JSON.
+(Done)Task 8. Can add new Data.
 */
 
 let tableColumnKey;
@@ -26,9 +27,63 @@ function readConfig() {
       createPageTitle(data.title);
       createTableElement();
       createTableHeader(columnName);
-      // createRowForm(columnName);
+      createRowForm(columnName);
     });
   });
+}
+
+function createRowForm(columnName) {
+  let lineBreak = document.createElement('br');
+  document.body.appendChild(lineBreak);
+
+  let rowForm = document.createElement('form');
+  rowForm.method = 'post';
+  rowForm.id = "rowForm";
+
+  for (let i = 0; i < columnName.length; i++) {
+    let tempInput = document.createElement('input');
+    tempInput.type = 'text';
+    tempInput.id = columnName[i];
+    tempInput.name = columnName[i];
+    tempInput.placeholder = columnName[i];
+    rowForm.appendChild(tempInput);
+  }
+
+  let button = document.createElement('button');
+  button.textContent = 'Add Data';
+  button.type = 'submit';
+
+
+  rowForm.appendChild(button);
+  rowForm.addEventListener('submit', (event) => {
+    event.preventDefault();
+    let object = {};
+    for (let i = 0; i < tableColumnKey.length; i++) {
+      createObject(object, tableColumnKey[i], event.target[i].value);
+    }
+    tableData.push(object);
+    refreshTable();
+    rowForm.reset();
+  }, false);
+
+  document.body.appendChild(rowForm);
+}
+
+function refreshTable() {
+  removeRows();
+  readData(tableData);
+}
+
+function createObject(obj, keyPath, value) {
+  lastKeyIndex = keyPath.length - 1;
+  for (var i = 0; i < lastKeyIndex; ++i) {
+    key = keyPath[i];
+    if (!(key in obj)) {
+      obj[key] = {};
+    }
+    obj = obj[key];
+  }
+  obj[keyPath[lastKeyIndex]] = value;
 }
 
 function createPageTitle(titleText) {
@@ -73,8 +128,7 @@ function addFileInput() {
     tableData = [];
     tableData = [...tempData];
     tempData = [];
-    removeRows();
-    readData(tableData);
+    refreshTable();
   }, false);
 
   let button2 = document.createElement('button');
@@ -85,8 +139,7 @@ function addFileInput() {
   button2.addEventListener('click', () => {
     tableData.push(...tempData);
     tempData = [];
-    removeRows();
-    readData(tableData);
+    refreshTable();
   }, false);
 
   form.appendChild(fileInput);
@@ -95,7 +148,6 @@ function addFileInput() {
 
   return form;
 }
-
 
 function createTableElement() {
   let table = document.createElement('table');
@@ -130,32 +182,6 @@ function downloadDataAsJSON() {
     anchor.remove();
   }
 }
-
-// function createRowForm(columnName) {
-//   let lineBreak = document.createElement('br');
-//   document.body.appendChild(lineBreak);
-
-//   let rowForm = document.createElement('input');
-//   rowForm.method = 'post';
-//   rowForm.id = "rowForm";
-
-//   for (let i = 0; i < columnName.length; i++) {
-//     let tempInput = document.createElement('input');
-//     tempInput.type = 'text';
-//     tempInput.id = columnName[i];
-//     tempInput.name = columnName[i];
-//     tempInput.placeholder = columnName[i];
-//     rowForm.appendChild(tempInput);
-//   }
-
-//   let button = document.createElement('button');
-//   button.textContent = 'Update';
-//   button.type = 'submit';
-
-//   rowForm.appendChild(button);
-
-//   document.body.appendChild(rowForm);
-// }
 
 function createTableHeader(headerConfig) {
   let tBody = document.getElementById('tableBody');
