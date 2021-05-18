@@ -15,6 +15,12 @@ td, th {
     padding: 8px;
 }
 
+td, th input {
+  background-color: transparent;
+}
+
 tr:nth-child(even) {
     background-color: #dddddd;
 }
+
+
