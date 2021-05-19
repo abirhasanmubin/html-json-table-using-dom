@@ -13,6 +13,7 @@ let tableColumnKey;
 let tableColumnName;
 let tableData = [];
 let tempData = [];
+let sortingDirection = [];
 
 function createHTMLPage() {
   readConfig();
@@ -24,6 +25,7 @@ function readConfig() {
       let { columnName, columnKey } = parseHeaderConfig(data.columns);
       tableColumnKey = columnKey.slice();
       tableColumnName = columnName.slice();
+      sortingDirection = [...new Array(tableColumnName.length).fill(true)];
       createPageHeader(data.title);
       createTableElement();
       createTableHeader(columnName);
@@ -229,7 +231,7 @@ function deleteTableRow(dataId) {
 }
 
 
-function createColumn(columnElement, rowId, headerFlag) {
+function createColumn(columnElement, rowIndex, headerFlag) {
   let column;
   if (headerFlag) {
     column = document.createElement('th');
@@ -246,9 +248,15 @@ function createColumn(columnElement, rowId, headerFlag) {
       event.preventDefault();
       let columnIndex = column.cellIndex;
       let value = document.getElementById('table')
-        .rows[rowId + 1].cells[columnIndex].textContent;
-      updateValue(rowId, columnIndex, value);
+        .rows[rowIndex + 1].cells[columnIndex].textContent;
+      updateValue(rowIndex, columnIndex, value);
     });
+  }
+  else {
+    column.addEventListener('click', () => {
+      let columnIndex = column.cellIndex;
+      sortTable(columnIndex);
+    })
   }
   return column;
 }
@@ -390,6 +398,48 @@ function createDataObject(obj, keyPath, value) {
 function createTableHeader(headerConfig) {
   let tBody = document.getElementById('tableBody');
   tBody.appendChild(createRow(headerConfig, 0, true));
+}
+
+function sortTable(index) {
+  let direction = sortingDirection[index];
+  sortingDirection[index] = !direction;
+  let tBody = document.getElementById('tableBody');
+  const tableRows = tBody.querySelectorAll('tr');
+  const sortedRows = Array.from(tableRows);
+  sortedRows.sort((rowA, rowB) => {
+    if (rowA.querySelectorAll('th').length > 0) {
+      return -1;
+    }
+    else if (rowB.querySelectorAll('th').length > 0) {
+      return 1;
+    }
+    let cellA = rowA.querySelectorAll('td')[index].textContent.toLowerCase();
+    let cellB = rowB.querySelectorAll('td')[index].textContent.toLowerCase();
+
+    if (cellA === cellB) {
+      return 0;
+    }
+    if (direction) {
+      if (cellA > cellB) {
+        return 1;
+      }
+      else {
+        return -1;
+      }
+    }
+    else {
+      if (cellA > cellB) {
+        return -1;
+      }
+      else {
+        return 1;
+      }
+    }
+  })
+  removeRows();
+  for (let i = 1; i < sortedRows.length; i++) {
+    tBody.appendChild(sortedRows[i]);
+  }
 }
 
 createHTMLPage();
