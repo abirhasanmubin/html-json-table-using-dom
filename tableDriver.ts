@@ -8,35 +8,26 @@
 (Done)Task 7. Export JSON.
 (Done)Task 8. Can add new Data.
 */
-
 let storage = window.localStorage;
-let tableColumnName; // For storing Table headers
-let tableColumnKey; // For storing the keys to data
-let tableData = []; // For stroing uploaded data
-let tempData = []; // For temporarily storing uploaded data
-let sortingDirection = []; // For tracking the sorting order
+let tableColumnName: string[] = [];
+let tableColumnKey: (string | string[])[] = [];
+let tableData: any[] = [];
+let tempData: any[] = [];
+let sortingDirection: boolean[] = [];
 
-
-/**
- * The Root Function
- */
-function createHTMLPage() {
-  readConfig();
-
-}
-
-/**
- * Parsing and creating initial table header from stored config file.
- */
-function readConfig() {
+function createHTMLPage(): void {
   fetch('config.json').then(response => {
     response.json().then(data => {
-      // Parsing column Name and keys from stored config file
       let { columnName, columnKey } = parseHeaderConfig(data.columns);
 
       tableColumnKey = columnKey.slice();
       tableColumnName = columnName.slice();
-      sortingDirection = [...new Array(tableColumnName.length).fill(true)];
+
+      // localStorage.setItem("tableColumnKey", tableColumnName.toString());
+      // console.log();
+
+
+      fillSortingDirection(tableColumnName.length);
 
       // Generating page header and necessary elements
       createPageHeader(data.title);
@@ -45,26 +36,28 @@ function readConfig() {
       createTableElement();
 
       // Added header to the table.
-      createTableHeader(columnName);
+      createTableHeader();
 
       // For adding new data to table
-      createRowForm(columnName);
+      createRowForm();
+
       if (getLocalTableData()) {
         tableData = getLocalTableData();
         parseData(tableData, tableColumnKey);
       }
-    });
-  });
+    })
+  })
 }
-/**
- * For parsing stored config file
- *
- * @param {Array} headerConfig
- * @return {Array, Array}
- */
-function parseHeaderConfig(headerConfig) {
-  let columnName = [];
-  let columnKey = [];
+
+function fillSortingDirection(arrLength: number): void {
+  for (let i = 0; i < arrLength; i++) {
+    sortingDirection.push(true);
+  }
+}
+
+function parseHeaderConfig(headerConfig: any) {
+  let columnName: string[] = []
+  let columnKey: (string | string[])[] = [];
   for (let i = 0; i < headerConfig.length; i++) {
     if (headerConfig[i].hasOwnProperty('header')) {
       if (headerConfig[i].header.length > 0) {
@@ -101,12 +94,7 @@ function parseHeaderConfig(headerConfig) {
   return { columnKey, columnName };
 }
 
-/**
- * Creating Page Header form parsed data and added extra features
- *
- * @param {string} titleText
- */
-function createPageHeader(titleText) {
+function createPageHeader(titleText: string): void {
   let headerDiv = document.createElement('div');
   headerDiv.id = "header";
 
@@ -135,12 +123,7 @@ function createPageHeader(titleText) {
   document.body.appendChild(lineBreak);
 }
 
-/**
- * For file upload form.
- *
- * @return {HTMLFormElement}
- */
-function addFileInput() {
+function addFileInput(): HTMLFormElement {
   let form = document.createElement('form');
   form.id = 'file';
   form.method = 'post';
@@ -156,14 +139,16 @@ function addFileInput() {
   uploadButton.type = 'button';
 
   uploadButton.addEventListener('click', () => {
-    // resetting data
-    tableData = [];
-    // storing data
-    tableData = [...tempData];
-    refreshLocalTableData();
-    tempData = [];
-    // Loading new data
-    form.reset();
+    if (fileInput.files.length !== 0) {
+      // resetting data
+      tableData = [];
+      // storing data
+      tableData = [...tempData];
+      tempData = [];
+      // Loading new data
+      refreshLocalTableData();
+      form.reset();
+    }
   }, false);
 
   let appendButton = document.createElement('button');
@@ -172,13 +157,14 @@ function addFileInput() {
   appendButton.type = 'button';
 
   appendButton.addEventListener('click', () => {
-    // appending data to stored data
-    tableData.push(...tempData);
-    refreshLocalTableData();
-    tempData = [];
-    // Loading changed data
-
-    form.reset();
+    if (fileInput.files.length !== 0) {
+      // appending data to stored data
+      tableData.push(...tempData);
+      tempData = [];
+      // Loading changed data
+      refreshLocalTableData();
+      form.reset();
+    }
   }, false);
 
   form.appendChild(fileInput);
@@ -186,6 +172,18 @@ function addFileInput() {
   form.appendChild(appendButton);
 
   return form;
+}
+function fileHandling(this: any) {
+  let file = this.files[0];
+  let reader = new FileReader();
+  reader.readAsText(file);
+  reader.onload = function () {
+    let fData = JSON.parse(<string>reader.result);
+    tempData = fData.slice();
+  };
+  reader.onerror = function () {
+    console.log(reader.error);
+  };
 }
 
 function getLocalTableData() {
@@ -198,63 +196,29 @@ function refreshLocalTableData() {
   refreshTable();
 }
 
-/**
- * event handler of fileInput form.
- *
- */
-function fileHandling() {
-  let file = this.files[0];
-  let reader = new FileReader();
-  reader.readAsText(file);
-  reader.onload = function () {
-    let fData = JSON.parse(reader.result);
-    tempData = fData.slice();
-  };
-  reader.onerror = function () {
-    console.log(reader.error);
-  };
-}
-/**
- * For refreshing table after data change.
- *
- */
 function refreshTable() {
   removeRows();
   parseData(tableData, tableColumnKey);
 }
 
-/**
- * Clearing table expect for the header
- */
 function removeRows() {
-  var table = document.getElementById('table');
-  rowCount = table.rows.length;
+  var table = <HTMLTableElement>document.getElementById('table');
+  let rowCount = table.rows.length;
   for (let i = rowCount - 1; i > 0; i--) {
     table.deleteRow(i);
   }
 }
-/**
- * For parsing user uploaded data
- * @param {Array} tableData
- * @param {Array} columnKey
- */
-function parseData(tableData, columnKey) {
+
+function parseData(tableData: any[], columnKey: (string | string[])[]) {
   for (let i = 0; i < tableData.length; i++) {
     createRowFromData(tableData[i], columnKey, i);
   }
 }
 
-/**
- * Creating a table row from the user uploaded data
- *
- * @param {Array} tableRowData
- * @param {Array[]} columnKey
- * @param {number} dataId
- */
-function createRowFromData(tableRowData, columnKey, dataId) {
+function createRowFromData(tableRowData: any, columnKey: (string | string[])[], dataId: number) {
   let rowData = [];
   // Parsing data
-  for (i = 0; i < columnKey.length; i++) {
+  for (let i = 0; i < columnKey.length; i++) {
     rowData.push(parseColumnData(tableRowData, columnKey[i]));
   }
 
@@ -263,14 +227,7 @@ function createRowFromData(tableRowData, columnKey, dataId) {
   tBody.appendChild(createRow(rowData, dataId));
 }
 
-/**
- * Parsing individual cell data.
- *
- * @param {Object} object
- * @param {Array} key
- * @return {string}
- */
-function parseColumnData(object, key) {
+function parseColumnData(object: any, key: (string | string[])) {
   let tempObject = { ...object };
   for (let i = 0; i < key.length; i++) {
     if (tempObject.hasOwnProperty(key[i])) {
@@ -287,14 +244,7 @@ function parseColumnData(object, key) {
   }
 }
 
-/**
- * Generating row for table and returning it
- * @param {Array} rowElements
- * @param {number} dataId
- * @param {boolean} headerFlag
- * @returns {HTMLTableRowElement}
- */
-function createRow(rowElements, dataId, headerFlag = false) {
+function createRow(rowElements: string[], dataId: number, headerFlag: boolean = false): HTMLTableRowElement {
   let row = document.createElement('tr');
   for (let i = 0; i < rowElements.length; i++) {
     row.appendChild(createColumn(rowElements[i], dataId, headerFlag));
@@ -311,31 +261,23 @@ function createRow(rowElements, dataId, headerFlag = false) {
     btnColumn.appendChild(button);
     row.appendChild(btnColumn);
   }
-
+  else {
+    let actionColumn = document.createElement('th');
+    let actionText = document.createTextNode("Action");
+    actionColumn.appendChild(actionText);
+    row.appendChild(actionColumn)
+  }
   return row;
 }
 
-/**
- * Deleteing selected data.
- *
- * @param {number} dataId
- */
-function deleteTableRow(dataId) {
+function deleteTableRow(dataId: number) {
   tableData.splice(dataId, 1);
-  refreshLocalTableData()
+  refreshLocalTableData();
 }
 
 
-/**
- * generating table cell for individual row
- *
- * @param {string} columnElement
- * @param {number} rowIndex
- * @param {boolean} headerFlag
- * @return {HTMLTableDataCellElementColumn}
- */
-function createColumn(columnElement, rowIndex, headerFlag) {
-  let column;
+function createColumn(columnElement: string, rowIndex: number, headerFlag: boolean) {
+  let column: (HTMLTableHeaderCellElement | HTMLTableDataCellElement);
   if (headerFlag) {
     column = document.createElement('th');
   }
@@ -346,11 +288,12 @@ function createColumn(columnElement, rowIndex, headerFlag) {
   column.style.cursor = "pointer";
   column.appendChild(columnText);
   if (!headerFlag) {
-    column.contentEditable = true;
+    column.contentEditable = "true";
+    // column.contentEditable = true;
     column.addEventListener('input', (event) => {
       event.preventDefault();
       let columnIndex = column.cellIndex;
-      let value = document.getElementById('table')
+      let value = (<HTMLTableElement>document.getElementById('table'))
         .rows[rowIndex + 1].cells[columnIndex].textContent;
       updateValue(rowIndex, columnIndex, value);
     });
@@ -365,13 +308,8 @@ function createColumn(columnElement, rowIndex, headerFlag) {
   return column;
 }
 
-/**
- * Update stored data after changed in table cell
- * @param {number} rowIndex
- * @param {number} columnIndex
- * @param {string} value
- */
-function updateValue(rowIndex, columnIndex, value) {
+
+function updateValue(rowIndex: number, columnIndex: number, value: string) {
   let data = tableData[rowIndex];
   let keys = tableColumnKey[columnIndex];
   for (let i = 0; i < keys.length; i++) {
@@ -384,11 +322,8 @@ function updateValue(rowIndex, columnIndex, value) {
   }
 }
 
-/**
- * Added Download button for downloading stored data
- * @returns {HTMLButtonElement}
- */
-function addDownloadButton() {
+
+function addDownloadButton(): HTMLButtonElement {
   let button = document.createElement('button');
   button.textContent = "Download Data as JSON";
   button.type = 'button';
@@ -396,11 +331,9 @@ function addDownloadButton() {
   button.addEventListener('click', downloadDataAsJSON, false);
   return button;
 }
-/**
- * Download event
- * Convert and makes the ready for download
- */
-function downloadDataAsJSON() {
+
+
+function downloadDataAsJSON(): void {
   if (tableData.length === 0) {
     alert("Add some data first!!!!");
   }
@@ -410,37 +343,31 @@ function downloadDataAsJSON() {
       + encodeURIComponent(JSON.stringify(tableData));
     anchor.href = dataStr;
     anchor.download = "data.json";
-    // anchor.setAttribute("download", "data.json");
+
     document.body.appendChild(anchor);
     anchor.click();
     anchor.remove();
   }
 }
 
-/**
- * Table search function
- * @returns {HTMLInputElement}
- */
 function addTableSearch() {
   let input = document.createElement('input');
   input.type = 'text';
   input.id = 'search'
   input.placeholder = 'Search Here'
-  input.contentEditable = true;
+  input.contentEditable = "true";
   input.addEventListener('input', searchResult, false);
   return input;
 }
 
-/**
- * Table search event handler.
- */
+
 function searchResult() {
-  let input = document.getElementById('search');
+  let input = <HTMLInputElement>document.getElementById('search');
   let searchText = input.value.toLowerCase();
   let table = document.getElementById("table");
   let tableRows = table.getElementsByTagName("tr");
   for (let i = 1; i < tableRows.length; i++) {
-    tableColumns = tableRows[i].getElementsByTagName("td");
+    let tableColumns = tableRows[i].getElementsByTagName("td");
     let searchFlag = false;
     for (let j = 0; j < tableColumns.length; j++) {
       let cell = tableColumns[j];
@@ -459,9 +386,7 @@ function searchResult() {
   }
 }
 
-/**
- * Generating initial table
- */
+
 function createTableElement() {
   let table = document.createElement('table');
   table.id = 'table';
@@ -471,11 +396,8 @@ function createTableElement() {
   document.body.appendChild(table);
 }
 
-/**
- * Adding form for adding new data.
- * @param {Array} columnName
- */
-function createRowForm(columnName) {
+
+function createRowForm() {
   let lineBreak = document.createElement('br');
   document.body.appendChild(lineBreak);
 
@@ -484,12 +406,12 @@ function createRowForm(columnName) {
   rowForm.method = 'post';
   rowForm.id = "rowForm";
 
-  for (let i = 0; i < columnName.length; i++) {
+  for (let i = 0; i < tableColumnName.length; i++) {
     let tempInput = document.createElement('input');
     tempInput.type = 'text';
-    tempInput.id = columnName[i];
-    tempInput.name = columnName[i];
-    tempInput.placeholder = columnName[i];
+    tempInput.id = tableColumnName[i];
+    tempInput.name = tableColumnName[i];
+    tempInput.placeholder = tableColumnName[i];
     tempInput.required = true;
     rowForm.appendChild(tempInput);
   }
@@ -500,11 +422,12 @@ function createRowForm(columnName) {
 
 
   rowForm.appendChild(button);
-  rowForm.addEventListener('submit', (event) => {
+  rowForm.addEventListener('submit', (event: any) => {
     event.preventDefault();
     let object = {};
     // Processing data
     for (let i = 0; i < tableColumnKey.length; i++) {
+      let data = event.target
       createDataObject(object, tableColumnKey[i], event.target[i].value);
     }
     // Adding data
@@ -515,16 +438,12 @@ function createRowForm(columnName) {
 
   document.body.appendChild(rowForm);
 }
-/**
- *
- * @param {Object} obj
- * @param {string} keyPath
- * @param {string} value
- */
-function createDataObject(obj, keyPath, value) {
-  lastKeyIndex = keyPath.length - 1;
+
+
+function createDataObject(obj: any, keyPath: (string | string[]), value: string) {
+  let lastKeyIndex = keyPath.length - 1;
   for (var i = 0; i < lastKeyIndex; ++i) {
-    key = keyPath[i];
+    let key = keyPath[i];
     if (!(key in obj)) {
       obj[key] = {};
     }
@@ -533,26 +452,19 @@ function createDataObject(obj, keyPath, value) {
   obj[keyPath[lastKeyIndex]] = value;
 }
 
-/**
- * Generating Table Header
- * @param {Array} headerConfig
- */
-function createTableHeader(headerConfig) {
+function createTableHeader() {
   let tBody = document.getElementById('tableBody');
-  tBody.appendChild(createRow(headerConfig, 0, true));
-}
+  tBody.appendChild(createRow(tableColumnName, 0, true));
 
-/**
- * For srting Table
- * @param {number} index
- */
-function sortTable(index) {
+}
+function sortTable(index: number) {
   let direction = sortingDirection[index];
   sortingDirection[index] = !direction;
-  let tBody = document.getElementById('tableBody');
+  let tBody = <HTMLTableSectionElement>document.getElementById('tableBody');
   const tableRows = tBody.querySelectorAll('tr');
+  //@ts-ignore
   const sortedRows = Array.from(tableRows);
-  sortedRows.sort((rowA, rowB) => {
+  sortedRows.sort((rowA: any, rowB: any) => {
     if (rowA.querySelectorAll('th').length > 0) {
       return -1;
     }
